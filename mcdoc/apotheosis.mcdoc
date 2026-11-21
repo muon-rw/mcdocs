@@ -340,14 +340,11 @@ struct Weight {
 	quality?: float @ -16..16,
 }
 
-/// Per-tier weights map (with optional default `weight`/`quality`), or a single Weight applied uniformly across all world tiers.
+/// Per-tier weights map, or a single Weight applied uniformly across all world tiers.
+/// Do not mix top-level `weight`/`quality` with tier keys: `TieredWeights.CODEC` uses `Codec.mapEither`, so `Weight.CODEC` matches first and silently ignores all per-tier overrides.
 type TieredWeights = (
 	Weight |
 	struct {
-		/// Default weight applied to any world tier not listed explicitly.
-		weight?: int @ 0..65536,
-		/// Default quality bonus applied to any world tier not listed explicitly.
-		quality?: float @ -16..16,
 		[WorldTier]: Weight,
 	}
 )
