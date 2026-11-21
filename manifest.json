@@ -1,0 +1,50 @@
+{
+  "formatVersion": 1,
+  "schemas": [
+    {
+      "id": "apotheosis",
+      "file": "mcdoc/apotheosis.mcdoc",
+      "module": "::apotheosis",
+      "modIds": ["apotheosis", "placebo"],
+      "alwaysLoad": true,
+      "minMinecraft": "1.21.1",
+      "paths": [
+        { "folder": "affixes", "category": "apotheosis:affixes" },
+        { "folder": "apotheosis/affixes", "category": "apotheosis:affixes" },
+        { "folder": "gems", "category": "apotheosis:gems" },
+        { "folder": "apotheosis/gems", "category": "apotheosis:gems" },
+        { "folder": "extra_gem_bonuses", "category": "apotheosis:extra_gem_bonuses" },
+        { "folder": "apotheosis/extra_gem_bonuses", "category": "apotheosis:extra_gem_bonuses" },
+        { "folder": "purity_weights", "category": "apotheosis:purity_weights" },
+        { "folder": "apotheosis/purity_weights", "category": "apotheosis:purity_weights" },
+        { "folder": "affix_loot_entries", "category": "apotheosis:affix_loot_entries" },
+        { "folder": "apotheosis/affix_loot_entries", "category": "apotheosis:affix_loot_entries" },
+        { "folder": "rarities", "category": "apotheosis:rarities" },
+        { "folder": "apotheosis/rarities", "category": "apotheosis:rarities" },
+        { "folder": "rarity_override", "category": "apotheosis:rarity_override" },
+        { "folder": "apotheosis/rarity_override", "category": "apotheosis:rarity_override" },
+        { "folder": "apothic_invaders", "category": "apotheosis:apothic_invaders" },
+        { "folder": "apotheosis/apothic_invaders", "category": "apotheosis:apothic_invaders" },
+        { "folder": "apothic_elites", "category": "apotheosis:apothic_elites" },
+        { "folder": "apotheosis/apothic_elites", "category": "apotheosis:apothic_elites" },
+        { "folder": "apothic_augments", "category": "apotheosis:apothic_augments" },
+        { "folder": "apotheosis/apothic_augments", "category": "apotheosis:apothic_augments" },
+        { "folder": "rogue_spawners", "category": "apotheosis:rogue_spawners" },
+        { "folder": "apotheosis/rogue_spawners", "category": "apotheosis:rogue_spawners" },
+        { "folder": "tier_augments", "category": "apotheosis:tier_augments" },
+        { "folder": "apotheosis/tier_augments", "category": "apotheosis:tier_augments" },
+        { "folder": "gear_sets", "category": "placebo:gear_sets" },
+        { "folder": "placebo/gear_sets", "category": "placebo:gear_sets" },
+        { "namespace": "apotheosis", "exact": "data_maps/dimension_type/invader_spawn_rules", "category": "apotheosis:data_map_invader_spawn_rules" },
+        { "namespace": "apotheosis", "exact": "data_maps/item/loot_category_overrides", "category": "apotheosis:data_map_loot_category_overrides" }
+      ]
+    }
+  ],
+  "recipeDispatcherBridges": [
+    "create:recipes",
+    "ars_nouveau:recipes",
+    "lychee:recipe",
+    "lychee:recipes",
+    "jsg_core:recipes"
+  ]
+}
