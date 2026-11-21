@@ -35,7 +35,7 @@ enum(string) AffixType {
 	Ability = "ability",
 }
 
-/// Attribute modifier operation.
+/// Attribute modifier operation (Placebo's enum codec accepts both snake_case and Java enum UPPER_CASE).
 enum(string) AttributeOperation {
 	/// Adds the value directly to the attribute base.
 	AddValue = "add_value",
@@ -43,6 +43,9 @@ enum(string) AttributeOperation {
 	AddMultipliedBase = "add_multiplied_base",
 	/// Multiplies the final attribute value by (1.0 + value).
 	AddMultipliedTotal = "add_multiplied_total",
+	AddValueUpper = "ADD_VALUE",
+	AddMultipliedBaseUpper = "ADD_MULTIPLIED_BASE",
+	AddMultipliedTotalUpper = "ADD_MULTIPLIED_TOTAL",
 }
 
 /// Damage category used by damage reduction affixes, gem bonuses, and tier augments.
@@ -337,10 +340,14 @@ struct Weight {
 	quality?: float @ -16..16,
 }
 
-/// Per-tier weights map, or a single Weight applied uniformly across all world tiers.
+/// Per-tier weights map (with optional default `weight`/`quality`), or a single Weight applied uniformly across all world tiers.
 type TieredWeights = (
 	Weight |
 	struct {
+		/// Default weight applied to any world tier not listed explicitly.
+		weight?: int @ 0..65536,
+		/// Default quality bonus applied to any world tier not listed explicitly.
+		quality?: float @ -16..16,
 		[WorldTier]: Weight,
 	}
 )
@@ -713,11 +720,8 @@ type GemClass = (
 	struct {
 		/// Tooltip lang key suffix (`gem_class.<key>`).
 		key: string,
-		/// Loot categories covered by this gem class (non-empty list or `#tag`).
-		types: (
-			[LootCategory] @ 1.. |
-			#[id(registry="apotheosis:loot_category", tags="required")] string
-		),
+		/// Loot categories covered by this gem class (non-empty list, `#tag`, or NeoForge compound holder set).
+		types: HolderSet<LootCategory>,
 	}
 )
 
