@@ -38,6 +38,14 @@
         { "namespace": "apotheosis", "exact": "data_maps/dimension_type/invader_spawn_rules", "category": "apotheosis:data_map_invader_spawn_rules" },
         { "namespace": "apotheosis", "exact": "data_maps/item/loot_category_overrides", "category": "apotheosis:data_map_loot_category_overrides" }
       ]
+    },
+    {
+      "id": "structure_weight_limit",
+      "file": "mcdoc/structure_weight_limit.mcdoc",
+      "module": "::structure_weight_limit",
+      "modIds": ["repurposed_structures", "yungsapi"],
+      "minMinecraft": "1.20",
+      "paths": []
     }
   ],
   "recipeDispatcherBridges": [

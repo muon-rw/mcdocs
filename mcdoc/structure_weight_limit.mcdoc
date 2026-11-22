@@ -1,0 +1,15 @@
+// Repurposed Structures (`StructurePoolMixin`) and YUNG's API (`IncreaseStructureWeightLimitMixin*`)
+// raise the weight limit for template pool elements from vanilla's 150 to 5000, on every loader
+// since 1.20. Everything except `weight` matches vanilla-mcdoc's `TemplatePool`.
+
+dispatch minecraft:resource["worldgen/template_pool"] to struct TemplatePool {
+	name?: string,
+	fallback: #[id="worldgen/template_pool"] string,
+	elements: [WeightedElement],
+}
+
+struct WeightedElement {
+	/// Repurposed Structures and YUNG's API raise vanilla's limit of 150 to 5000.
+	weight: int @ 1..5000,
+	element: ::java::data::worldgen::template_pool::Element,
+}
