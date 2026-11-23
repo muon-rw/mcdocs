@@ -83,11 +83,9 @@ struct ParticlePlacement {
 	[string]: any,
 }
 
-struct Attack {
+struct AttackBase {
 	/// Conditions that must all match for this attack step to run.
 	conditions?: [AttackCondition],
-	/// Shape used to test entities in range of this attack.
-	hitbox?: HitBoxShape,
 	/// Multiplier applied to base attack damage. Defaults to 1.0.
 	damage_multiplier?: float @ 0..,
 	/// Multiplier applied to player movement speed while swinging (1.21+). Defaults to 1.0.
@@ -98,10 +96,8 @@ struct Attack {
 	range_multiplier?: float @ 0..,
 	/// Sweeping angle in degrees (0..360). Defaults to 0.
 	angle?: double @ 0..360,
-	/// Fraction of attack cooldown spent winding up before the hit registers (0..1).
+	/// Fraction of attack cooldown spent winding up before the hit registers (0..1). Defaults to 0.
 	upswing?: double @ 0..1,
-	/// Animation identifier played during this attack.
-	animation?: string,
 	/// Sound played when the swing starts.
 	swing_sound?: WeaponSound,
 	/// Sound played when the attack hits an entity.
@@ -111,7 +107,23 @@ struct Attack {
 	trail_particles?: [ParticlePlacement],
 }
 
-struct WeaponAttributes {
+struct Attack {
+	...AttackBase,
+	/// Shape used to test entities in range of this attack.
+	hitbox: HitBoxShape,
+	/// Animation identifier played during this attack.
+	animation: string @ 1..,
+}
+
+struct AttackOverride {
+	...AttackBase,
+	/// Shape used to test entities in range of this attack (inherits from `parent` when omitted).
+	hitbox?: HitBoxShape,
+	/// Animation identifier played during this attack (inherits from `parent` when omitted).
+	animation?: string @ 1..,
+}
+
+struct WeaponAttributesBase {
 	/// Deprecated in 1.21+. Absolute attack reach in blocks; prefer `range_bonus` on 1.21+.
 	attack_range?: double @ 0..,
 	/// Bonus added to the player's entity interaction range (1.21+).
@@ -126,16 +138,36 @@ struct WeaponAttributes {
 	two_handed?: boolean,
 	/// Weapon family name (lowercase), matched by `DUAL_WIELDING_SAME_CATEGORY`.
 	category?: string,
-	/// Ordered list of combo attack steps.
-	attacks?: [Attack],
 	/// Weapon swing trail rendering configuration (1.21+).
 	#[since="1.21"]
 	trail_appearance?: ConditionalTrailAppearance,
 }
 
-dispatch minecraft:resource["bettercombat:weapon_attributes"] to struct WeaponAttributesFile {
-	/// Preset `weapon_attributes` ID to inherit from (for example `"bettercombat:claymore"`).
-	parent?: #[id="weapon_attributes"] string,
-	/// Weapon attributes defined directly or overriding fields inherited from `parent`.
-	attributes?: WeaponAttributes,
+struct WeaponAttributes {
+	...WeaponAttributesBase,
+	/// Ordered list of combo attack steps.
+	attacks?: [Attack],
 }
+
+struct WeaponAttributesOverride {
+	...WeaponAttributesBase,
+	/// Ordered list of combo attack steps merged by index onto `parent`'s attacks.
+	attacks?: [AttackOverride],
+}
+
+struct InheritedWeaponAttributesFile {
+	/// Preset `weapon_attributes` ID to inherit from (for example `"bettercombat:claymore"`).
+	parent: #[id="weapon_attributes"] string,
+	/// Weapon attributes overriding fields inherited from `parent`.
+	attributes?: WeaponAttributesOverride,
+}
+
+struct StandaloneWeaponAttributesFile {
+	/// Weapon attributes defined directly without a `parent` preset.
+	attributes: WeaponAttributes,
+}
+
+dispatch minecraft:resource["bettercombat:weapon_attributes"] to (
+	InheritedWeaponAttributesFile |
+	StandaloneWeaponAttributesFile
+)
