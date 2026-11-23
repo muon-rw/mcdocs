@@ -1,0 +1,96 @@
+// Datapack schema for Dynamic Difficulty (`data/<ns>/leveling_settings/...` and loot condition).
+
+enum(string) AttributeOperationName {
+	/// Adds `amount` directly to the attribute base value.
+	AddValue = "add_value",
+	/// Adds `amount * base` to the attribute value.
+	AddMultipliedBase = "add_multiplied_base",
+	/// Multiplies the final attribute value by `1.0 + amount`.
+	AddMultipliedTotal = "add_multiplied_total",
+}
+
+struct LevelingAttributeModifier {
+	/// Entity attribute ID scaled per mob level.
+	attribute: #[id="attribute"] string,
+	/// Modifier amount applied per level.
+	amount: double,
+	/// Attribute modifier operation (numeric legacy IDs 0..2 are deprecated).
+	operation: (AttributeOperationName | #[deprecated] int @ 0..2),
+}
+
+struct SpawnPosOverride {
+	/// X coordinate used as the distance-scaling origin for this dimension.
+	x: int,
+	/// Z coordinate used as the distance-scaling origin for this dimension.
+	z: int,
+}
+
+struct ApplyLevelBonuses {
+	/// Whether biome leveling bonuses apply.
+	biome: boolean,
+	/// Whether structure leveling bonuses apply.
+	structure: boolean,
+	/// Whether player-level scaling bonuses apply.
+	player: boolean,
+}
+
+struct BaseLevelingSettings {
+	/// Base mob level before distance, depth, height, time, and bonus modifiers.
+	starting_level?: int @ 0..,
+	/// Upper cap on calculated mob level (0 means unlimited).
+	max_level?: int @ 0..,
+	/// Levels added per block of horizontal distance from spawn.
+	levels_per_distance?: float,
+	/// Levels added per block below sea level.
+	levels_per_deepness?: float,
+	/// Levels added per block above sea level.
+	levels_per_height?: float,
+	/// Levels added per elapsed in-game day.
+	levels_per_day?: float,
+	/// Levels added per unit of local difficulty (0.0 to 6.75).
+	levels_per_local_difficulty?: float,
+	/// Maximum random bonus added to each mob's level (0 to this value).
+	random_level_bonus?: int @ 0..,
+	/// Per-level attribute modifiers overriding the config defaults (an empty list disables them).
+	attribute_modifiers?: [LevelingAttributeModifier],
+	/// Multiplier for player-level scaling.
+	player_level_multiplier?: double,
+}
+
+dispatch minecraft:resource["dynamic_difficulty:dimension_leveling_settings"] to struct DimensionLevelingSettings {
+	...BaseLevelingSettings,
+	/// Custom XZ origin used when calculating `levels_per_distance`.
+	spawn_pos_override?: SpawnPosOverride,
+	/// Y level treated as sea level for `levels_per_deepness` and `levels_per_height`. Defaults to 64.
+	sea_level?: int,
+	/// Controls which additive bonus sources apply in this dimension.
+	apply_level_bonuses?: ApplyLevelBonuses,
+	/// Merge priority for `dimension_tags` entries (higher priority applies later and overrides earlier fields). Defaults to 0.
+	priority?: int,
+}
+
+dispatch minecraft:resource["dynamic_difficulty:entity_leveling_settings"] to struct EntityLevelingSettings {
+	...BaseLevelingSettings,
+	/// Controls which additive bonus sources apply to this entity.
+	apply_level_bonuses?: ApplyLevelBonuses,
+	/// Merge priority for `entity_tags` entries (higher priority applies later and overrides earlier fields). Defaults to 0.
+	priority?: int,
+}
+
+dispatch minecraft:resource["dynamic_difficulty:location_leveling_settings"] to struct LocationLevelingSettings {
+	...BaseLevelingSettings,
+	/// Flat additive level bonus granted to mobs spawning in this biome or structure. Defaults to 0.
+	level_bonus?: int,
+	/// Whether `level_bonus` can exceed `max_level` (defaults to false for biomes, true for structures).
+	bypasses_cap?: boolean,
+}
+
+/// Loot condition checking whether `this_entity`'s Dynamic Difficulty level matches a range or exact value.
+dispatch minecraft:loot_condition["dynamic_difficulty:entity_level"] to struct EntityLevelCondition {
+	/// Minimum required entity level (inclusive).
+	min?: int @ 0..,
+	/// Maximum allowed entity level (inclusive).
+	max?: int @ 0..,
+	/// Exact required entity level (takes precedence over `min` and `max`).
+	exact?: int @ 0..,
+}

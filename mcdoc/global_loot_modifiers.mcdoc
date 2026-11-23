@@ -1,0 +1,58 @@
+// Datapack schema for Forge, NeoForge, and Porting Lib Global Loot Modifiers.
+// Covers `global_loot_modifiers.json`, base GLM entries, built-in `add_table` serializers,
+// and loader loot conditions (`loot_table_id`, `can_item_perform_ability`, `can_tool_perform_action`).
+
+use ::java::data::loot::LootCondition
+
+// ============================================================================
+// Global Loot Modifier Index (`data/<loader>/loot_modifiers/global_loot_modifiers.json`)
+// ============================================================================
+
+dispatch minecraft:resource["neoforge:global_loot_modifiers"] to struct GlobalLootModifiersIndex {
+	/// When true, replaces lower-priority packs' modifier lists instead of appending. Defaults to false.
+	replace?: boolean,
+	/// Ordered list of `loot_modifiers` IDs (`<namespace>:<path>`) to load.
+	entries: [#[id="loot_modifiers"] string],
+}
+
+// ============================================================================
+// Individual Loot Modifiers (`data/<ns>/loot_modifiers/*.json`)
+// ============================================================================
+
+dispatch minecraft:resource["neoforge:loot_modifier"] to struct GlobalLootModifier {
+	/// Registered global loot modifier serializer ID.
+	type: #[id="neoforge:global_loot_modifier_serializers"] string,
+	/// Loot conditions that must all pass for this modifier to run.
+	conditions?: [LootCondition],
+	...neoforge:loot_modifier_codec[[type]],
+}
+
+/// Built-in serializer that rolls another loot table and adds its drops.
+dispatch neoforge:loot_modifier_codec["neoforge:add_table", "forge:add_table", "porting_lib:add_table"] to struct AddTableLootModifier {
+	/// Loot table ID to roll and append.
+	table: #[id="loot_table"] string,
+}
+
+// ============================================================================
+// Loader Loot Conditions (`minecraft:loot_condition`)
+// ============================================================================
+
+/// Matches when the loot context originates from a specific loot table ID.
+dispatch minecraft:loot_condition["neoforge:loot_table_id", "forge:loot_table_id", "porting_lib:loot_table_id"] to struct LootTableIdCondition {
+	/// Exact loot table ID to match.
+	loot_table_id: #[id="loot_table"] string,
+}
+
+/// Matches when the tool in the loot context can perform a NeoForge `ItemAbility` (1.21+).
+#[since="1.21"]
+dispatch minecraft:loot_condition["neoforge:can_item_perform_ability"] to struct CanItemPerformAbilityCondition {
+	/// Item ability name (for example `"axe_strip"`, `"shears_dig"`, `"hoe_till"`).
+	ability: string,
+}
+
+/// Matches when the tool in the loot context can perform a Forge `ToolAction` (1.20.x).
+#[until="1.21"]
+dispatch minecraft:loot_condition["forge:can_tool_perform_action", "porting_lib:can_tool_perform_action"] to struct CanToolPerformActionCondition {
+	/// Tool action name (for example `"axe_strip"`, `"shears_dig"`, `"hoe_till"`).
+	action: string,
+}

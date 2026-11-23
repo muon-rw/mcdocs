@@ -1,0 +1,120 @@
+// Datapack schema for 1.20.x Apotheosis and Zenith (`bosses`, `wanderer_trades`, `enchanting_stats`).
+
+struct LegacyItemStack {
+	item: #[id="item"] string,
+	count?: int @ 0..,
+	nbt?: (string | struct { [string]: any }),
+}
+
+enum(string) LegacyAttributeOperation {
+	Addition = "ADDITION",
+	MultiplyBase = "MULTIPLY_BASE",
+	MultiplyTotal = "MULTIPLY_TOTAL",
+	AdditionLower = "addition",
+	MultiplyBaseLower = "multiply_base",
+	MultiplyTotalLower = "multiply_total",
+}
+
+struct LegacyStepFunction {
+	min: double,
+	steps: int @ 0..,
+	step: double,
+}
+
+struct LegacyBossAttributeModifier {
+	attribute: #[id="attribute"] string,
+	operation: LegacyAttributeOperation,
+	value: (double | LegacyStepFunction),
+}
+
+struct LegacyBossEffect {
+	effect: #[id="mob_effect"] string,
+	chance?: float @ 0..1,
+	amplifier?: int @ 0..,
+	duration?: int @ 1..,
+}
+
+struct LegacyBossStats {
+	enchant_chance: float @ 0..1,
+	enchantment_levels: [int @ 0..] @ 4,
+	effects?: [LegacyBossEffect],
+	attribute_modifiers?: [LegacyBossAttributeModifier],
+}
+
+struct LegacyBossSize {
+	width: float @ 0..,
+	height: float @ 0..,
+}
+
+struct LegacyBossMount {
+	entity: #[id="entity_type"] string,
+	nbt?: (string | struct { [string]: any }),
+}
+
+// ============================================================================
+// Bosses (`data/<ns>/bosses/*.json`, 1.20.x Apotheosis / Zenith)
+// ============================================================================
+
+dispatch minecraft:resource["apotheosis_legacy:bosses"] to struct LegacyBoss {
+	entity: #[id="entity_type"] string,
+	weight: int @ 0..,
+	quality?: float @ 0..,
+	size: LegacyBossSize,
+	valid_gear_sets: [string],
+	dimensions: [#[id="dimension"] string],
+	min_rarity: string,
+	max_rarity: string,
+	stats: struct {
+		[string]: LegacyBossStats,
+	},
+	mount?: LegacyBossMount,
+	nbt?: (string | struct { [string]: any }),
+	stages?: [string],
+}
+
+// ============================================================================
+// Wanderer Trades (`data/<ns>/wanderer_trades/*.json`, 1.20.x Apotheosis / Zenith)
+// ============================================================================
+
+dispatch minecraft:resource["apotheosis_legacy:wanderer_trades"] to struct LegacyWandererTrade {
+	type: #[dispatcher_key="apotheosis_legacy:wanderer_trade"] string,
+	...apotheosis_legacy:wanderer_trade[[type]],
+}
+
+dispatch apotheosis_legacy:wanderer_trade["apotheosis:basic_trade", "zenith:basic_trade"] to struct {
+	input_1: LegacyItemStack,
+	input_2?: LegacyItemStack,
+	output: LegacyItemStack,
+	max_trades?: int @ 1..,
+	xp?: int @ 0..,
+	price_mult?: float @ 0..,
+	rare?: boolean,
+}
+
+dispatch apotheosis_legacy:wanderer_trade["apotheosis:affix", "zenith:affix"] to struct {
+	input_1: LegacyItemStack,
+	input_2?: LegacyItemStack,
+	rarities?: (string | [string]),
+	entries?: [string],
+	rare?: boolean,
+}
+
+// ============================================================================
+// Enchanting Stats (`data/<ns>/enchanting_stats/*.json`, 1.20.x Apotheosis / Zenith)
+// ============================================================================
+
+struct LegacyEnchantingStatsValues {
+	maxEterna?: float,
+	eterna?: float,
+	quanta?: float,
+	arcana?: float,
+	rectification?: float,
+	clues?: int,
+}
+
+dispatch minecraft:resource["apotheosis_legacy:enchanting_stats"] to struct LegacyEnchantingStats {
+	block?: #[id="block"] string,
+	tag?: #[id(registry="block", tags="implicit")] string,
+	blocks?: [#[id="block"] string],
+	stats: LegacyEnchantingStatsValues,
+}

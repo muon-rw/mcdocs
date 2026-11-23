@@ -5,7 +5,7 @@
       "id": "apotheosis",
       "file": "mcdoc/apotheosis.mcdoc",
       "module": "::apotheosis",
-      "modIds": ["apotheosis", "placebo"],
+      "modIds": ["apotheosis", "placebo", "apothic_attributes", "apothic_enchanting", "apothic_spawners"],
       "alwaysLoad": true,
       "minMinecraft": "1.21.1",
       "paths": [
@@ -35,8 +35,26 @@
         { "folder": "apotheosis/tier_augments", "category": "apotheosis:tier_augments" },
         { "folder": "gear_sets", "category": "placebo:gear_sets" },
         { "folder": "placebo/gear_sets", "category": "placebo:gear_sets" },
+        { "folder": "wanderer_trades", "category": "placebo:wanderer_trades" },
+        { "folder": "placebo/wanderer_trades", "category": "placebo:wanderer_trades" },
+        { "folder": "brewing_mixes", "category": "placebo:brewing_mixes" },
+        { "folder": "placebo/brewing_mixes", "category": "placebo:brewing_mixes" },
+        { "folder": "enchanting_stats", "category": "apothic_enchanting:enchanting_stats" },
+        { "folder": "apothic_enchanting/enchanting_stats", "category": "apothic_enchanting:enchanting_stats" },
         { "namespace": "apotheosis", "exact": "data_maps/dimension_type/invader_spawn_rules", "category": "apotheosis:data_map_invader_spawn_rules" },
         { "namespace": "apotheosis", "exact": "data_maps/item/loot_category_overrides", "category": "apotheosis:data_map_loot_category_overrides" }
+      ]
+    },
+    {
+      "id": "apotheosis_legacy",
+      "file": "mcdoc/apotheosis_legacy.mcdoc",
+      "module": "::apotheosis_legacy",
+      "modIds": ["apotheosis", "zenith"],
+      "maxMinecraft": "1.20.6",
+      "paths": [
+        { "folder": "bosses", "category": "apotheosis_legacy:bosses" },
+        { "folder": "wanderer_trades", "category": "apotheosis_legacy:wanderer_trades" },
+        { "folder": "enchanting_stats", "category": "apotheosis_legacy:enchanting_stats" }
       ]
     },
     {
@@ -46,6 +64,155 @@
       "modIds": ["repurposed_structures", "yungsapi"],
       "minMinecraft": "1.20",
       "paths": []
+    },
+    {
+      "id": "global_loot_modifiers",
+      "file": "mcdoc/global_loot_modifiers.mcdoc",
+      "module": "::global_loot_modifiers",
+      "loaders": ["forge", "neoforge"],
+      "modIds": ["porting_lib_loot", "porting_lib"],
+      "paths": [
+        { "namespace": "neoforge", "exact": "loot_modifiers/global_loot_modifiers", "category": "neoforge:global_loot_modifiers" },
+        { "namespace": "forge", "exact": "loot_modifiers/global_loot_modifiers", "category": "neoforge:global_loot_modifiers" },
+        { "namespace": "porting_lib", "exact": "loot_modifiers/global_loot_modifiers", "category": "neoforge:global_loot_modifiers" },
+        { "folder": "loot_modifiers", "category": "neoforge:loot_modifier" }
+      ]
+    },
+    {
+      "id": "bettercombat",
+      "file": "mcdoc/bettercombat.mcdoc",
+      "module": "::bettercombat",
+      "modIds": ["bettercombat"],
+      "minMinecraft": "1.20",
+      "paths": [
+        { "folder": "weapon_attributes", "category": "bettercombat:weapon_attributes" }
+      ]
+    },
+    {
+      "id": "dynamic_difficulty",
+      "file": "mcdoc/dynamic_difficulty.mcdoc",
+      "module": "::dynamic_difficulty",
+      "modIds": ["dynamic_difficulty"],
+      "minMinecraft": "1.21",
+      "paths": [
+        { "folder": "leveling_settings/dimensions", "category": "dynamic_difficulty:dimension_leveling_settings" },
+        { "folder": "leveling_settings/dimension_tags", "category": "dynamic_difficulty:dimension_leveling_settings" },
+        { "folder": "leveling_settings/entities", "category": "dynamic_difficulty:entity_leveling_settings" },
+        { "folder": "leveling_settings/entity_tags", "category": "dynamic_difficulty:entity_leveling_settings" },
+        { "folder": "leveling_settings/biomes", "category": "dynamic_difficulty:location_leveling_settings" },
+        { "folder": "leveling_settings/biome_tags", "category": "dynamic_difficulty:location_leveling_settings" },
+        { "folder": "leveling_settings/structures", "category": "dynamic_difficulty:location_leveling_settings" },
+        { "folder": "leveling_settings/structure_tags", "category": "dynamic_difficulty:location_leveling_settings" }
+      ]
+    },
+    {
+      "id": "irons_spellbooks",
+      "file": "mcdoc/irons_spellbooks.mcdoc",
+      "module": "::irons_spellbooks",
+      "modIds": ["irons_spellbooks"],
+      "minMinecraft": "1.20",
+      "paths": [
+        { "folder": "irons_spellbooks_spell_config", "category": "irons_spellbooks:spell_config" },
+        { "folder": "irons_spellbooks/upgrade_orb_type", "category": "irons_spellbooks:upgrade_orb_type" }
+      ]
+    },
+    {
+      "id": "legendary_survival_overhaul",
+      "file": "mcdoc/legendary_survival_overhaul.mcdoc",
+      "module": "::legendary_survival_overhaul",
+      "modIds": ["legendarysurvivaloverhaul"],
+      "minMinecraft": "1.20",
+      "paths": [
+        { "folder": "legendarysurvivaloverhaul/temperature/items", "category": "lso:temperature_items" },
+        { "folder": "legendarysurvivaloverhaul/temperature/mounts", "category": "lso:temperature_mounts" },
+        { "folder": "legendarysurvivaloverhaul/temperature/origins", "category": "lso:temperature_origins" },
+        { "folder": "legendarysurvivaloverhaul/temperature/blocks", "category": "lso:temperature_blocks" },
+        { "folder": "legendarysurvivaloverhaul/temperature/consumables", "category": "lso:temperature_consumables" },
+        { "folder": "legendarysurvivaloverhaul/temperature/consumable_blocks", "category": "lso:temperature_consumable_blocks" },
+        { "folder": "legendarysurvivaloverhaul/temperature/biomes", "category": "lso:temperature_biomes" },
+        { "folder": "legendarysurvivaloverhaul/temperature/dimensions", "category": "lso:temperature_dimensions" },
+        { "folder": "legendarysurvivaloverhaul/temperature/fuel_items", "category": "lso:temperature_fuel_items" },
+        { "folder": "legendarysurvivaloverhaul/thirst/consumables", "category": "lso:thirst_consumables" },
+        { "folder": "legendarysurvivaloverhaul/thirst/blocks", "category": "lso:thirst_blocks" },
+        { "folder": "legendarysurvivaloverhaul/body_damage/items", "category": "lso:body_damage_items" },
+        { "folder": "legendarysurvivaloverhaul/body_damage/consumables", "category": "lso:body_damage_consumables" },
+        { "folder": "legendarysurvivaloverhaul/body_damage/damage_sources", "category": "lso:body_damage_sources" }
+      ]
+    },
+    {
+      "id": "tiered",
+      "file": "mcdoc/tiered.mcdoc",
+      "module": "::tiered",
+      "modIds": ["tiered", "tierify"],
+      "minMinecraft": "1.20",
+      "paths": [
+        { "folder": "item_attributes", "category": "tiered:item_attributes" },
+        { "folder": "reforge_items", "category": "tiered:reforge_items" }
+      ]
+    },
+    {
+      "id": "irons_jewelry",
+      "file": "mcdoc/irons_jewelry.mcdoc",
+      "module": "::irons_jewelry",
+      "modIds": ["irons_jewelry"],
+      "minMinecraft": "1.20",
+      "paths": [
+        { "folder": "irons_jewelry/material", "category": "irons_jewelry:material" },
+        { "folder": "irons_jewelry/part", "category": "irons_jewelry:part" },
+        { "folder": "irons_jewelry/pattern", "category": "irons_jewelry:pattern" }
+      ]
+    },
+    {
+      "id": "farmers_delight",
+      "file": "mcdoc/farmers_delight.mcdoc",
+      "module": "::farmers_delight",
+      "modIds": ["farmersdelight"],
+      "minMinecraft": "1.20",
+      "paths": []
+    },
+    {
+      "id": "loot_integrations",
+      "file": "mcdoc/loot_integrations.mcdoc",
+      "module": "::loot_integrations",
+      "modIds": ["lootintegrations"],
+      "minMinecraft": "1.20",
+      "paths": [
+        { "namespace": "lootintegrations", "folder": "loot", "category": "lootintegrations:loot" }
+      ]
+    },
+    {
+      "id": "curios",
+      "file": "mcdoc/curios.mcdoc",
+      "module": "::curios",
+      "modIds": ["curios"],
+      "minMinecraft": "1.20",
+      "paths": [
+        { "folder": "curios/slots", "category": "curios:slots" },
+        { "folder": "curios/entities", "category": "curios:entities" }
+      ]
+    },
+    {
+      "id": "accessories",
+      "file": "mcdoc/accessories.mcdoc",
+      "module": "::accessories",
+      "modIds": ["accessories"],
+      "minMinecraft": "1.20",
+      "paths": [
+        { "folder": "accessories/slot", "category": "accessories:slot" },
+        { "folder": "accessories/entity", "category": "accessories:entity" },
+        { "folder": "accessories/group", "category": "accessories:group" }
+      ]
+    },
+    {
+      "id": "trinkets",
+      "file": "mcdoc/trinkets.mcdoc",
+      "module": "::trinkets",
+      "modIds": ["trinkets"],
+      "minMinecraft": "1.20",
+      "paths": [
+        { "namespace": "trinkets", "folder": "slots", "category": "trinkets:slots" },
+        { "namespace": "trinkets", "folder": "entities", "category": "trinkets:entities" }
+      ]
     }
   ],
   "recipeDispatcherBridges": [

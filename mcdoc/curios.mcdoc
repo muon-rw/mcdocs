@@ -1,0 +1,53 @@
+// Datapack schema for Curios API (`data/<ns>/curios/slots/` and `data/<ns>/curios/entities/`).
+
+enum(string) CuriosSizeOperation {
+	/// Sets the slot count directly.
+	Set = "SET",
+	/// Adds `size` to the current slot count.
+	Add = "ADD",
+	/// Subtracts `size` from the current slot count.
+	Remove = "REMOVE",
+}
+
+enum(string) CuriosDropRule {
+	/// Follows the `keepInventory` gamerule and mod defaults.
+	Default = "DEFAULT",
+	/// Always drops equipped items on death.
+	AlwaysDrop = "ALWAYS_DROP",
+	/// Always keeps equipped items on death.
+	AlwaysKeep = "ALWAYS_KEEP",
+	/// Destroys equipped items on death.
+	Destroy = "DESTROY",
+}
+
+dispatch minecraft:resource["curios:slots"] to struct CuriosSlot {
+	/// When true, replaces lower-priority slot definitions instead of merging.
+	replace?: boolean,
+	/// Sort priority in the Curios inventory screen (lower appears first).
+	order?: int,
+	/// Number of slots added or set by `operation`.
+	size?: int @ 0..,
+	/// How `size` combines with existing definitions (`SET`, `ADD`, or `REMOVE`).
+	operation?: CuriosSizeOperation,
+	/// Empty-slot icon texture path (`namespace:slot/...`).
+	icon?: string,
+	/// Whether cosmetic slots are generated alongside functional slots.
+	add_cosmetic?: boolean,
+	/// Whether players can toggle rendering for this slot.
+	render_toggle?: boolean,
+	/// Whether this slot appears in Curios's default GUI.
+	use_native_gui?: boolean,
+	/// Death drop rule for items equipped in this slot.
+	drop_rule?: CuriosDropRule,
+	/// Slot validator predicate IDs (for example `"curios:tag"`).
+	validators?: [string],
+}
+
+dispatch minecraft:resource["curios:entities"] to struct CuriosEntitySlots {
+	/// When true, replaces lower-priority slot assignments for these entities.
+	replace?: boolean,
+	/// Entity type IDs (omitting namespace defaults to `minecraft:`, for example `"player"`).
+	entities: [#[id(registry="entity_type", tags="allowed")] string],
+	/// Curios slot type IDs assigned to the listed entities.
+	slots: [string],
+}

@@ -1,0 +1,90 @@
+// Datapack schema for Tiered / TieredZ / Tierify (`data/<ns>/item_attributes/` and `reforge_items/`).
+
+enum(string) TieredOperation {
+	Addition = "ADDITION",
+	MultiplyBase = "MULTIPLY_BASE",
+	MultiplyTotal = "MULTIPLY_TOTAL",
+	#[since="1.21"]
+	AddValue = "add_value",
+	#[since="1.21"]
+	AddMultipliedBase = "add_multiplied_base",
+	#[since="1.21"]
+	AddMultipliedTotal = "add_multiplied_total",
+}
+
+enum(string) TieredEquipmentSlot {
+	Head = "HEAD",
+	Chest = "CHEST",
+	Legs = "LEGS",
+	Feet = "FEET",
+	Mainhand = "MAINHAND",
+	Offhand = "OFFHAND",
+	HeadLower = "head",
+	ChestLower = "chest",
+	LegsLower = "legs",
+	FeetLower = "feet",
+	MainhandLower = "mainhand",
+	OffhandLower = "offhand",
+}
+
+struct ItemVerifier {
+	/// Exact item ID eligible for this tier.
+	id?: #[id="item"] string,
+	/// Item tag ID (without leading `#`) eligible for this tier.
+	tag?: #[id(registry="item", tags="implicit")] string,
+}
+
+struct TierStyle {
+	/// Text color name or hex color (`#RRGGBB`) for the tier prefix.
+	color?: string,
+	bold?: boolean,
+	italic?: boolean,
+	underlined?: boolean,
+	strikethrough?: boolean,
+	obfuscated?: boolean,
+	font?: string,
+}
+
+struct TierAttributeModifier {
+	/// Modifier name.
+	name: string,
+	/// Attribute modifier operation.
+	operation: TieredOperation,
+	/// Numeric modifier value.
+	amount: double,
+}
+
+struct AttributeTemplate {
+	/// Entity attribute ID (omitting namespace defaults to `minecraft:`, for example `"generic.armor"`).
+	type: #[id="attribute"] string,
+	/// Attribute modifier values applied when equipped.
+	modifier: TierAttributeModifier,
+	/// Equipment slots where this modifier applies if the item fits the slot.
+	optional_equipment_slots?: [TieredEquipmentSlot],
+	/// Equipment slots required for this modifier to apply.
+	required_equipment_slots?: [TieredEquipmentSlot],
+}
+
+dispatch minecraft:resource["tiered:item_attributes"] to struct PotentialAttribute {
+	/// Unique tier identifier (for example `"tiered:common_armor_1"`).
+	id: string,
+	/// Relative selection weight when rolling a tier.
+	weight: int @ 0..,
+	/// Text style applied to the item name prefix.
+	style: TierStyle,
+	/// Item IDs or tags that can roll this tier.
+	verifiers: [ItemVerifier],
+	/// Attribute modifiers granted by this tier.
+	attributes: [AttributeTemplate],
+	/// Optional NBT values merged onto rolled items.
+	nbt_values?: struct {
+		[string]: any,
+	},
+}
+
+dispatch minecraft:resource["tiered:reforge_items"] to struct ReforgeItemMapping {
+	/// Equipment item IDs covered by this reforge mapping.
+	items: [#[id="item"] string],
+	/// Base repair/reforge material item IDs accepted for `items`.
+	base: [#[id="item"] string],
+}

@@ -1,0 +1,141 @@
+// Datapack schema for Better Combat (`data/<ns>/weapon_attributes/*.json`).
+
+enum(string) HitBoxShape {
+	/// Box extending forward in front of the player, used for thrusting attacks.
+	ForwardBox = "FORWARD_BOX",
+	/// Vertical sweeping arc in front of the player.
+	VerticalPlane = "VERTICAL_PLANE",
+	/// Horizontal sweeping arc in front of the player.
+	HorizontalPlane = "HORIZONTAL_PLANE",
+}
+
+enum(string) AttackCondition {
+	/// Active when not dual wielding.
+	NotDualWielding = "NOT_DUAL_WIELDING",
+	/// Active when holding any weapon in both hands.
+	DualWieldingAny = "DUAL_WIELDING_ANY",
+	/// Active when holding the same item in both hands.
+	DualWieldingSame = "DUAL_WIELDING_SAME",
+	/// Active when holding two weapons sharing the same `category`.
+	DualWieldingSameCategory = "DUAL_WIELDING_SAME_CATEGORY",
+	/// Active when the off hand is empty.
+	NoOffhandItem = "NO_OFFHAND_ITEM",
+	/// Active when holding a shield in the off hand.
+	OffHandShield = "OFF_HAND_SHIELD",
+	/// Active only when swinging from the main hand.
+	MainHandOnly = "MAIN_HAND_ONLY",
+	/// Active only when swinging from the off hand.
+	OffHandOnly = "OFF_HAND_ONLY",
+	/// Active while mounted on an entity.
+	Mounted = "MOUNTED",
+	/// Active while not mounted.
+	NotMounted = "NOT_MOUNTED",
+}
+
+struct WeaponSound {
+	/// Sound event ID to play.
+	id: #[id="sound_event"] string,
+	/// Volume multiplier. Defaults to 1.0.
+	volume?: float @ 0..,
+	/// Base pitch multiplier. Defaults to 1.0.
+	pitch?: float @ 0..,
+	/// Random pitch variance added/subtracted on each swing. Defaults to 0.1.
+	randomness?: float @ 0..,
+}
+
+struct TrailAppearance {
+	/// Trail tint color (RGB integer or hex string).
+	color?: (int | string),
+	/// Trail opacity (0..1).
+	alpha?: float @ 0..1,
+	/// Trail texture identifier.
+	texture?: string,
+	/// Trail width multiplier.
+	scale?: float @ 0..,
+}
+
+struct TrailAppearanceOverride {
+	/// Item condition predicate controlling when this override applies.
+	condition?: struct {
+		[string]: any,
+	},
+	/// Replacement trail appearance settings.
+	appearance?: TrailAppearance,
+}
+
+struct ConditionalTrailAppearance {
+	/// Base trail appearance.
+	default?: TrailAppearance,
+	/// Conditional overrides evaluated against the held item.
+	overrides?: [TrailAppearanceOverride],
+	[string]: any,
+}
+
+struct ParticlePlacement {
+	/// Particle type ID spawned along the swing arc.
+	particle_id?: #[id="particle_type"] string,
+	/// Number of particles spawned per tick.
+	count?: int @ 0..,
+	/// Position offset along the weapon blade.
+	offset?: float,
+	/// Random spread radius.
+	spread?: float @ 0..,
+	[string]: any,
+}
+
+struct Attack {
+	/// Conditions that must all match for this attack step to run.
+	conditions?: [AttackCondition],
+	/// Shape used to test entities in range of this attack.
+	hitbox?: HitBoxShape,
+	/// Multiplier applied to base attack damage. Defaults to 1.0.
+	damage_multiplier?: float @ 0..,
+	/// Multiplier applied to player movement speed while swinging (1.21+). Defaults to 1.0.
+	#[since="1.21"]
+	movement_speed_multiplier?: float @ 0..,
+	/// Multiplier applied to attack range for this combo step (1.21+). Defaults to 1.0.
+	#[since="1.21"]
+	range_multiplier?: float @ 0..,
+	/// Sweeping angle in degrees (0..360). Defaults to 0.
+	angle?: double @ 0..360,
+	/// Fraction of attack cooldown spent winding up before the hit registers (0..1).
+	upswing?: double @ 0..1,
+	/// Animation identifier played during this attack.
+	animation?: string,
+	/// Sound played when the swing starts.
+	swing_sound?: WeaponSound,
+	/// Sound played when the attack hits an entity.
+	impact_sound?: WeaponSound,
+	/// Particles emitted along the swing trail (1.21+).
+	#[since="1.21"]
+	trail_particles?: [ParticlePlacement],
+}
+
+struct WeaponAttributes {
+	/// Deprecated in 1.21+. Absolute attack reach in blocks; prefer `range_bonus` on 1.21+.
+	attack_range?: double @ 0..,
+	/// Bonus added to the player's entity interaction range (1.21+).
+	#[since="1.21"]
+	range_bonus?: double,
+	/// Idle animation ID played when held in the main hand.
+	pose?: string,
+	/// Idle animation ID played when held in the off hand (1.21+).
+	#[since="1.21"]
+	off_hand_pose?: string,
+	/// When true, blocks using the off-hand slot while this weapon is selected.
+	two_handed?: boolean,
+	/// Weapon family name (lowercase), matched by `DUAL_WIELDING_SAME_CATEGORY`.
+	category?: string,
+	/// Ordered list of combo attack steps.
+	attacks?: [Attack],
+	/// Weapon swing trail rendering configuration (1.21+).
+	#[since="1.21"]
+	trail_appearance?: ConditionalTrailAppearance,
+}
+
+dispatch minecraft:resource["bettercombat:weapon_attributes"] to struct WeaponAttributesFile {
+	/// Preset `weapon_attributes` ID to inherit from (for example `"bettercombat:claymore"`).
+	parent?: #[id="weapon_attributes"] string,
+	/// Weapon attributes defined directly or overriding fields inherited from `parent`.
+	attributes?: WeaponAttributes,
+}

@@ -1,6 +1,5 @@
 // Bundled mcdoc schemas for Apotheosis (1.21.1+ and 26.1) and Placebo gear sets.
 // Converted from Shadows-of-Fire/Apotheosis and Shadows-of-Fire/Placebo schema documentation
-// and verified against both 1.21 and 26.1 data codecs.
 
 // ============================================================================
 // Shared Enums & Primitives
@@ -1562,3 +1561,312 @@ dispatch minecraft:resource["apotheosis:data_map_loot_category_overrides"] to st
 	/// Items to remove from this data map.
 	remove?: [#[id(registry="item", tags="allowed")] string],
 }
+
+// ============================================================================
+// Placebo Wanderer Trades (`data/<ns>/wanderer_trades/` or `placebo/wanderer_trades/`)
+// ============================================================================
+
+/// Vanilla merchant ItemCost (1.21+).
+struct WandererItemCost {
+	/// Required item ID.
+	id: #[id="item"] string,
+	/// Stack count required. Defaults to 1.
+	count?: int @ 1..99,
+	/// Optional required data component predicates.
+	components?: DataComponentPatch,
+}
+
+#[since="1.21.1"]
+dispatch minecraft:resource["placebo:wanderer_trades"] to struct WandererTrade {
+	/// Wanderer trade serializer ID.
+	type: #[dispatcher_key="placebo:wanderer_trade"] string,
+	...placebo:wanderer_trade[[type]],
+}
+
+/// Static wandering trader offer with fixed inputs and output.
+dispatch placebo:wanderer_trade["placebo:basic_trade"] to struct BasicWandererTrade {
+	input_1: WandererItemCost,
+	input_2?: WandererItemCost,
+	output: PlaceboItemStack,
+	/// Maximum uses before locking. Defaults to 1.
+	max_trades?: int @ 1..,
+	/// Villager experience awarded per purchase. Defaults to 0.
+	xp?: int @ 0..,
+	/// Price multiplier applied on demand/reputation changes. Defaults to 0.05.
+	price_mult?: float @ 0..,
+	/// When true, added to the rare trade pool instead of the common pool. Defaults to false.
+	rare?: boolean,
+}
+
+/// Generates an affix item from `entries` (or all entries when empty) for fixed inputs.
+dispatch placebo:wanderer_trade["apotheosis:affix_trade", "apotheosis:affix"] to struct AffixWandererTrade {
+	input_1: WandererItemCost,
+	input_2?: WandererItemCost,
+	/// Optional rarity override restricting generated items.
+	rarities?: (LootRarityRef | [LootRarityRef]),
+	/// Affix loot entry IDs to pull from (empty uses all available entries).
+	entries: [#[id="apotheosis:affix_loot_entries"] string],
+	rare?: boolean,
+}
+
+/// Generates an affix item whose cost is computed from the world tier and item repair material.
+dispatch placebo:wanderer_trade["apotheosis:automatic_affix_trade"] to struct AutomaticAffixWandererTrade {
+	/// Optional rarity override restricting generated items.
+	rarities?: (LootRarityRef | [LootRarityRef]),
+	/// Affix loot entry IDs to pull from (empty uses all available entries).
+	entries: [#[id="apotheosis:affix_loot_entries"] string],
+	rare?: boolean,
+}
+
+/// Dispatches a different wandering trader offer per Apotheosis world tier.
+dispatch placebo:wanderer_trade["apotheosis:tiered_trade"] to struct TieredWandererTrade {
+	/// Map of world tier name to inner wanderer trade definition.
+	trades: struct {
+		[WorldTier]: WandererTrade,
+	},
+	rare?: boolean,
+}
+
+// ============================================================================
+// Placebo Brewing Mixes (`data/<ns>/brewing_mixes/` or `placebo/brewing_mixes/`)
+// ============================================================================
+
+#[since="1.21.1"]
+dispatch minecraft:resource["placebo:brewing_mixes"] to (
+	struct PotionBrewingMix {
+		mix_type: ("potion" | "POTION"),
+		/// Base potion ID.
+		from: #[id="potion"] string,
+		/// Brewing stand reagent ingredient.
+		ingredient: PlaceboIngredient,
+		/// Resulting potion ID.
+		to: #[id="potion"] string,
+	} |
+	struct ContainerBrewingMix {
+		mix_type: ("container" | "CONTAINER"),
+		/// Base container item ID (for example `"minecraft:potion"`).
+		from: #[id="item"] string,
+		/// Brewing stand reagent ingredient.
+		ingredient: PlaceboIngredient,
+		/// Resulting container item ID (for example `"minecraft:splash_potion"`).
+		to: #[id="item"] string,
+	}
+)
+
+// ============================================================================
+// Apothic Enchanting Stats (`data/<ns>/enchanting_stats/` or `apothic_enchanting/enchanting_stats/`)
+// ============================================================================
+
+/// Enchanting table stat contributions or infusion requirements.
+struct EnchantingStatsValues {
+	/// Maximum Eterna cap contributed to by this block. Defaults to 30.
+	maxEterna?: float,
+	/// Eterna contributed (or required in infusion recipes). Defaults to 0.
+	eterna?: float,
+	/// Quanta contributed (or required in infusion recipes). Defaults to 0.
+	quanta?: float,
+	/// Arcana contributed (or required in infusion recipes). Defaults to 0.
+	arcana?: float,
+	/// Bonus enchanting clues granted. Defaults to 0.
+	clues?: int,
+}
+
+#[since="1.21.1"]
+dispatch minecraft:resource["apothic_enchanting:enchanting_stats"] to struct EnchantingBlockStats {
+	/// Single block ID (1.21.1).
+	#[until="26.1"]
+	block?: #[id="block"] string,
+	/// Block tag ID without leading `#` (1.21.1).
+	#[until="26.1"]
+	tag?: #[id(registry="block", tags="implicit")] string,
+	/// Block ID, `#tag`, or list of block IDs.
+	blocks?: HolderSet<#[id(registry="block", tags="allowed")] string>,
+	/// Enchanting stats provided by matching blocks.
+	stats: EnchantingStatsValues,
+}
+
+// ============================================================================
+// Apothic Spawners, Enchanting, & Apotheosis Recipes (`minecraft:recipe_serializer`)
+// ============================================================================
+
+enum(string) SpawnerStatMode {
+	/// Adds `value` to the spawner's current stat.
+	Add = "add",
+	/// Sets the spawner's stat directly to `value`.
+	Set = "set",
+}
+
+struct SpawnerStatChange {
+	/// Registered `apothic_spawners:spawner_stat` ID.
+	type: #[dispatcher_key="apothic_spawners:spawner_stat"] string,
+	/// Whether to add to or overwrite the current stat. Defaults to `"add"`.
+	mode?: SpawnerStatMode,
+	...apothic_spawners:spawner_stat[[type]],
+}
+
+dispatch apothic_spawners:spawner_stat[
+	"apothic_spawners:min_delay",
+	"apothic_spawners:max_delay",
+	"apothic_spawners:spawn_count",
+	"apothic_spawners:max_nearby_entities",
+	"apothic_spawners:req_player_range",
+	"apothic_spawners:spawn_range",
+	"apothic_spawners:echoing",
+] to struct {
+	value: int,
+	min?: int,
+	max?: int,
+}
+
+dispatch apothic_spawners:spawner_stat["apothic_spawners:initial_health"] to struct {
+	value: float,
+	min?: float,
+	max?: float,
+}
+
+dispatch apothic_spawners:spawner_stat[
+	"apothic_spawners:ignore_players",
+	"apothic_spawners:ignore_conditions",
+	"apothic_spawners:redstone_control",
+	"apothic_spawners:ignore_light",
+	"apothic_spawners:no_ai",
+	"apothic_spawners:silent",
+	"apothic_spawners:youthful",
+	"apothic_spawners:burning",
+] to struct {
+	value: boolean,
+	min?: boolean,
+	max?: boolean,
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer["apothic_spawners:spawner_modifier"] to struct SpawnerModifierRecipe {
+	/// Item used in the main hand to modify a spawner.
+	mainhand: PlaceboIngredient,
+	/// Optional item required in the off hand (for example quartz to invert a modifier).
+	offhand?: PlaceboIngredient,
+	/// Whether applying the modifier consumes the off-hand item. Defaults to false.
+	consumes_offhand?: boolean,
+	/// Spawner stat changes applied when this modifier triggers.
+	stat_changes: [SpawnerStatChange],
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer["apothic_enchanting:infusion", "apothic_enchanting:keep_nbt_infusion"] to struct InfusionRecipe {
+	/// Input item placed in the enchanting table.
+	input: PlaceboIngredient,
+	/// Output item stack produced by infusion.
+	result: PlaceboItemStack,
+	/// Minimum enchanting table stats required.
+	requirements: EnchantingStatsValues,
+	/// Optional upper cap on enchanting table stats (`-1` means no cap).
+	max_requirements?: EnchantingStatsValues,
+}
+
+struct SizedIngredient {
+	item?: #[id="item"] string,
+	tag?: #[id(registry="item", tags="implicit")] string,
+	ingredient?: PlaceboIngredient,
+	count?: int @ 1..,
+	[string]: any,
+}
+
+struct SalvageOutputData {
+	stack: PlaceboItemStack,
+	min_count: int @ 0..99,
+	max_count: int @ 1..99,
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer["apotheosis:salvaging"] to struct SalvagingRecipe {
+	input: PlaceboIngredient,
+	outputs: [SalvageOutputData],
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer["apotheosis:reforging"] to struct ReforgingRecipe {
+	rarity: LootRarityRef,
+	material_cost: int @ 1..99,
+	sigil_cost: int @ 0..99,
+	level_cost: int @ 0..65536,
+	tables: HolderSet<#[id(registry="block", tags="allowed")] string>,
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer["apotheosis:add_sockets"] to struct AddSocketsRecipe {
+	input: PlaceboIngredient,
+	max_sockets: int @ 0..16,
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer["apotheosis:basic_gem_cutting"] to struct BasicGemCuttingRecipe {
+	base: PlaceboIngredient,
+	top: [SizedIngredient],
+	left: [SizedIngredient],
+	right: [SizedIngredient],
+	output: PlaceboItemStack,
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer["apotheosis:purity_upgrade"] to struct PurityUpgradeRecipe {
+	purity: Purity,
+	left: [SizedIngredient],
+	right: [SizedIngredient],
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer["apotheosis:sized_upgrade_recipe"] to struct SizedUpgradeRecipe {
+	template: PlaceboIngredient,
+	base: PlaceboIngredient,
+	addition: SizedIngredient,
+	result: PlaceboItemStack,
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer["apotheosis:potion_charm_crafting"] to struct PotionCharmCraftingRecipe {
+	pattern: [string],
+	key: struct {
+		[string]: PlaceboIngredient,
+	},
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer["apotheosis:potion_charm_infusion"] to struct PotionCharmInfusionRecipe {
+	requirements: EnchantingStatsValues,
+	max_requirements?: EnchantingStatsValues,
+}
+
+#[since="1.21.1"]
+dispatch minecraft:recipe_serializer[
+	"apotheosis:socketing",
+	"apotheosis:withdrawal",
+	"apotheosis:unnaming",
+	"apotheosis:malice",
+	"apotheosis:supremacy",
+] to struct {}
+
+// ============================================================================
+// Apotheosis Global Loot Modifiers & Loot Conditions
+// ============================================================================
+
+struct LootPatternEntry {
+	/// Probability (0..1) applied when `pattern` matches the loot table ID.
+	chance: float @ 0..1,
+	pattern: struct {
+		/// Optional namespace filter.
+		domain?: string,
+		/// Regex matched against the loot table path.
+		path_regex: string,
+	},
+}
+
+#[since="1.21.1"]
+dispatch neoforge:loot_modifier_codec["apotheosis:gems", "apotheosis:affix_loot", "apotheosis:affix_conversion"] to struct ApothPatternLootModifier {
+	entries: [LootPatternEntry],
+}
+
+#[since="1.21.1"]
+dispatch neoforge:loot_modifier_codec["apotheosis:code_hook"] to struct {}
+
+#[since="1.21.1"]
+dispatch minecraft:loot_condition["apotheosis:killed_by_real_player"] to struct {}

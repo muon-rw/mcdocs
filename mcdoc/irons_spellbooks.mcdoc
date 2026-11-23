@@ -1,0 +1,205 @@
+// Datapack schema for Iron's Spells 'n Spellbooks (1.20.1 and 1.21.1+).
+// Covers spell config overrides, upgrade orb types, Alchemist Cauldron recipes,
+// loot functions, and global loot modifiers.
+
+use ::java::data::recipe::Ingredient
+use ::java::data::loot::LootCondition
+use ::java::world::item::ItemStack
+
+enum(string) SpellRarity {
+	Common = "common",
+	Uncommon = "uncommon",
+	Rare = "rare",
+	Epic = "epic",
+	Legendary = "legendary",
+}
+
+enum(string) UpgradeAttributeOperation {
+	AddValue = "add_value",
+	AddMultipliedBase = "add_multiplied_base",
+	AddMultipliedTotal = "add_multiplied_total",
+	#[until="1.21"]
+	Addition = "addition",
+	#[until="1.21"]
+	MultiplyBase = "multiply_base",
+	#[until="1.21"]
+	MultiplyTotal = "multiply_total",
+	#[until="1.21"]
+	AdditionUpper = "ADDITION",
+	#[until="1.21"]
+	MultiplyBaseUpper = "MULTIPLY_BASE",
+	#[until="1.21"]
+	MultiplyTotalUpper = "MULTIPLY_TOTAL",
+}
+
+struct LegacyItemResult {
+	item: #[id="item"] string,
+	count?: int @ 1..,
+}
+
+struct LegacyCodecItemStack {
+	id: #[id="item"] string,
+	Count?: int @ 1..,
+	tag?: struct {
+		[string]: any,
+	},
+}
+
+struct FluidStackLegacy {
+	FluidName: #[id="fluid"] string,
+	Amount: int @ 1..,
+}
+
+struct FluidStackModern {
+	id: #[id="fluid"] string,
+	amount: int @ 1..,
+}
+
+type FluidStack = (
+	#[until="1.21"] FluidStackLegacy |
+	#[since="1.21"] FluidStackModern
+)
+
+// ============================================================================
+// Spell Config Overrides (`data/<ns>/irons_spellbooks_spell_config/*.json`)
+// ============================================================================
+
+dispatch minecraft:resource["irons_spellbooks:spell_config"] to struct SpellConfig {
+	/// Whether this spell is enabled in game.
+	"irons_spellbooks:enabled"?: boolean,
+	/// School ID assigned to this spell (for example `"irons_spellbooks:fire"`).
+	"irons_spellbooks:school"?: #[id="irons_spellbooks:schools"] string,
+	/// Minimum rarity tier for scrolls of this spell.
+	"irons_spellbooks:min_rarity"?: SpellRarity,
+	/// Maximum castable level for this spell.
+	"irons_spellbooks:max_level"?: int @ 1..,
+	/// Base cooldown in seconds.
+	"irons_spellbooks:cooldown_in_seconds"?: double @ 0..,
+	/// Multiplier applied to mana cost.
+	"irons_spellbooks:mana_multiplier"?: double @ 0..,
+	/// Multiplier applied to spell power scaling.
+	"irons_spellbooks:power_multiplier"?: double @ 0..,
+	/// Whether scrolls for this spell can be crafted at the Scroll Forge.
+	"irons_spellbooks:allow_crafting"?: boolean,
+	/// Addon-registered `SpellConfigParameter` overrides.
+	[string]: any,
+}
+
+// ============================================================================
+// Upgrade Orb Types (`data/<ns>/irons_spellbooks/upgrade_orb_type/*.json`)
+// ============================================================================
+
+dispatch minecraft:resource["irons_spellbooks:upgrade_orb_type"] to struct UpgradeOrbType {
+	/// Entity attribute modified by applying this upgrade orb.
+	attribute: #[id="attribute"] string,
+	/// Attribute modifier amount per upgrade application.
+	amount: double,
+	/// Attribute modifier operation.
+	operation: UpgradeAttributeOperation,
+	/// Optional upgrade orb item associated with this upgrade type.
+	containerItem?: (
+		#[id="item"] string |
+		#[since="1.21"] ItemStack |
+		#[until="1.21"] (LegacyCodecItemStack | LegacyItemResult)
+	),
+}
+
+// ============================================================================
+// Alchemist Cauldron & Smithing Recipes (`minecraft:recipe_serializer`)
+// ============================================================================
+
+dispatch minecraft:recipe_serializer["irons_spellbooks:alchemist_cauldron_brew"] to struct AlchemistCauldronBrewRecipe {
+	/// Base fluid required inside the Alchemist Cauldron.
+	base_fluid: FluidStack,
+	/// Item reagent dropped into the cauldron.
+	input: Ingredient,
+	/// Resulting fluids produced by brewing.
+	results: [FluidStack],
+}
+
+dispatch minecraft:recipe_serializer["irons_spellbooks:alchemist_cauldron_fill"] to struct AlchemistCauldronFillRecipe {
+	/// Fluid added to the cauldron.
+	fluid: FluidStack,
+	/// Filled container item used on the cauldron.
+	input: Ingredient,
+	/// Empty container item returned to the player.
+	result: (#[since="1.21"] ItemStack | #[until="1.21"] LegacyItemResult),
+	/// Whether the player must sneak-click to trigger the fill.
+	must_sneak?: boolean,
+}
+
+dispatch minecraft:recipe_serializer["irons_spellbooks:alchemist_cauldron_empty"] to struct AlchemistCauldronEmptyRecipe {
+	/// Fluid drained from the cauldron.
+	fluid: FluidStack,
+	/// Empty container item used on the cauldron.
+	input: Ingredient,
+	/// Filled item returned to the player.
+	result: (#[since="1.21"] ItemStack | #[until="1.21"] LegacyItemResult),
+	/// Sound played when emptying.
+	sound?: #[id="sound_event"] string,
+}
+
+dispatch minecraft:recipe_serializer["irons_spellbooks:no_addition_smithing_transform"] to struct NoAdditionSmithingTransformRecipe {
+	/// Smithing template ingredient.
+	template: Ingredient,
+	/// Base item ingredient.
+	base: Ingredient,
+	/// Transformed output stack.
+	result: (#[since="1.21"] ItemStack | #[until="1.21"] LegacyItemResult),
+}
+
+// ============================================================================
+// Loot Functions (`minecraft:loot_function`)
+// ============================================================================
+
+struct QualityRange {
+	min: float @ 0..1,
+	max: float @ 0..1,
+}
+
+dispatch minecraft:loot_function["irons_spellbooks:randomize_spell"] to struct RandomizeSpellFunction {
+	/// Optional loot conditions gating this function.
+	conditions?: [LootCondition],
+	/// Quality roll range (0..1) controlling scroll rarity and level.
+	quality: (float @ 0..1 | QualityRange),
+	/// Optional school filter restricting eligible spells.
+	school?: #[id="irons_spellbooks:schools"] string,
+	/// Optional explicit list of eligible spell IDs.
+	spells?: [#[id="irons_spellbooks:spells"] string],
+}
+
+dispatch minecraft:loot_function["irons_spellbooks:randomize_ring_enhancement"] to struct RandomizeRingEnhancementFunction {
+	/// Optional loot conditions gating this function.
+	conditions?: [LootCondition],
+	/// Optional school filter restricting eligible spells for the ring.
+	school?: #[id="irons_spellbooks:schools"] string,
+	/// Optional explicit list of eligible spell IDs.
+	spells?: [#[id="irons_spellbooks:spells"] string],
+}
+
+dispatch minecraft:loot_function["irons_spellbooks:set_furled_map"] to struct SetFurledMapFunction {
+	/// Optional loot conditions gating this function.
+	conditions?: [LootCondition],
+	/// Target structure or `#structure_tag` ID located by the map.
+	destination: #[id(registry="worldgen/structure", tags="allowed")] string,
+	/// Dimension ID where the target structure generates.
+	dimension: #[id="dimension"] string,
+	/// Translation key for the map's item name.
+	description_translation?: string,
+}
+
+// ============================================================================
+// Global Loot Modifiers (`neoforge:loot_modifier_codec`)
+// ============================================================================
+
+dispatch neoforge:loot_modifier_codec["irons_spellbooks:append_loot"] to struct AppendLootModifier {
+	/// Loot table ID whose rolls are appended to the target loot table.
+	key: #[id="loot_table"] string,
+}
+
+dispatch neoforge:loot_modifier_codec["irons_spellbooks:replace_loot"] to struct ReplaceLootModifier {
+	/// Loot table ID replacing rolls from the target loot table.
+	key: #[id="loot_table"] string,
+	/// Probability (0..1) that an entry is replaced.
+	chanceToReplace: float @ 0..1,
+}

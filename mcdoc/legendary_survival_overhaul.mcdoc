@@ -1,0 +1,182 @@
+// Datapack schema for Legendary Survival Overhaul (1.20.1 and 1.21.1+).
+
+enum(string) BodyPart {
+	Head = "HEAD",
+	Chest = "CHEST",
+	RightArm = "RIGHT_ARM",
+	LeftArm = "LEFT_ARM",
+	RightLeg = "RIGHT_LEG",
+	LeftLeg = "LEFT_LEG",
+	RightFoot = "RIGHT_FOOT",
+	LeftFoot = "LEFT_FOOT",
+}
+
+enum(string) DamageDistribution {
+	/// Damage does not apply to any body part.
+	None = "NONE",
+	/// Damage applies randomly to one listed body part.
+	OneOf = "ONE_OF",
+	/// Damage applies to every listed body part.
+	All = "ALL",
+}
+
+enum(string) ConsumableGroup {
+	Food = "FOOD",
+	Drink = "DRINK",
+}
+
+enum(string) ThermalFuelType {
+	Heating = "HEATING",
+	Cooling = "COOLING",
+}
+
+struct BlockStateProperties {
+	/// Required block state property key-value matches (empty object matches all states).
+	[string]: string,
+}
+
+struct ThirstMobEffect {
+	/// Mob effect ID to apply on consumption.
+	effect: #[id="mob_effect"] string,
+	/// Chance (0..1) of applying the effect.
+	chance: float @ 0..1,
+	/// Effect duration in ticks.
+	duration: int @ 0..,
+	/// Effect amplifier (0 = level I).
+	amplifier: int @ 0..,
+}
+
+// ============================================================================
+// Temperature (`data/<ns>/legendarysurvivaloverhaul/temperature/...`)
+// ============================================================================
+
+/// Temperature resistance and ambient offset for wearable items, mounts, or origins.
+struct TemperatureResistance {
+	/// Direct temperature offset applied while active.
+	temperature?: float,
+	/// Resistance against heat.
+	heat_resistance?: float,
+	/// Resistance against cold.
+	cold_resistance?: float,
+	/// General resistance against both heat and cold.
+	thermal_resistance?: float,
+}
+
+dispatch minecraft:resource["lso:temperature_items"] to TemperatureResistance
+dispatch minecraft:resource["lso:temperature_mounts"] to TemperatureResistance
+dispatch minecraft:resource["lso:temperature_origins"] to TemperatureResistance
+
+dispatch minecraft:resource["lso:temperature_blocks"] to [struct TemperatureBlockEntry {
+	/// Ambient temperature emitted by matching block states.
+	temperature: float,
+	/// Block state property filters (empty object matches all states).
+	properties?: BlockStateProperties,
+}]
+
+dispatch minecraft:resource["lso:temperature_consumables"] to [struct TemperatureConsumableEntry {
+	/// Effect group (`FOOD` or `DRINK`).
+	group: ConsumableGroup,
+	/// Temperature shift level (negative cools, positive warms).
+	temperature_level: int,
+	/// Effect duration in ticks.
+	duration: int @ 0..,
+}]
+
+dispatch minecraft:resource["lso:temperature_consumable_blocks"] to [struct TemperatureConsumableBlockEntry {
+	/// Effect group (`FOOD` or `DRINK`).
+	group: ConsumableGroup,
+	/// Temperature shift level (negative cools, positive warms).
+	temperature_level: int,
+	/// Effect duration in ticks.
+	duration: int @ 0..,
+	/// Block state property filters (empty object matches all states).
+	properties?: BlockStateProperties,
+}]
+
+dispatch minecraft:resource["lso:temperature_biomes"] to struct TemperatureBiomeOverride {
+	/// Base biome temperature override.
+	temperature: float,
+	/// Whether the biome counts as dry (reduces wet cooling and affects desert scaling).
+	is_dry: boolean,
+}
+
+dispatch minecraft:resource["lso:temperature_dimensions"] to struct TemperatureDimensionOverride {
+	/// Base dimension ambient temperature.
+	temperature: float,
+	/// Sea level Y coordinate used for altitude temperature scaling.
+	sea_level_height: int,
+	/// Whether altitude modifies temperature in this dimension.
+	has_altitude: boolean,
+	/// Length of the day/night temperature cycle in ticks (1.20.1).
+	#[until="1.21"]
+	temperatureTimeCycleTicks?: int @ 0..,
+}
+
+dispatch minecraft:resource["lso:temperature_fuel_items"] to struct TemperatureFuelItem {
+	/// Whether this fuel powers heaters (`HEATING`) or coolers (`COOLING`).
+	thermal_type: ThermalFuelType,
+	/// Burn duration in ticks.
+	duration: int @ 1..,
+}
+
+// ============================================================================
+// Thirst (`data/<ns>/legendarysurvivaloverhaul/thirst/...`)
+// ============================================================================
+
+struct ThirstEntry {
+	/// Hydration points restored.
+	hydration: int,
+	/// Hydration saturation restored.
+	saturation: float,
+	/// Optional mob effects (for example Thirst) applied when drinking.
+	effects?: [ThirstMobEffect],
+	/// Block state or item property filters (empty object matches all).
+	properties?: BlockStateProperties,
+}
+
+dispatch minecraft:resource["lso:thirst_consumables"] to [ThirstEntry]
+dispatch minecraft:resource["lso:thirst_blocks"] to [ThirstEntry]
+
+// ============================================================================
+// Body Damage (`data/<ns>/legendarysurvivaloverhaul/body_damage/...`)
+// ============================================================================
+
+dispatch minecraft:resource["lso:body_damage_items"] to struct BodyDamageItemResistance {
+	/// General body damage resistance across all parts.
+	body_resistance?: float,
+	head_resistance?: float,
+	chest_resistance?: float,
+	right_arm_resistance?: float,
+	left_arm_resistance?: float,
+	legs_resistance?: float,
+	feet_resistance?: float,
+}
+
+dispatch minecraft:resource["lso:body_damage_consumables"] to struct BodyDamageHealingConsumable {
+	/// Number of body parts healed (0 heals all damaged parts).
+	healing_charges: int @ 0..,
+	/// Health restored per charge.
+	healing_value: float @ 0..,
+	/// Time in ticks over which healing applies.
+	healing_time: int @ 0..,
+	/// Duration in ticks of the Recovery effect (0 disables it).
+	recovery_effect_duration?: int @ 0..,
+	/// Amplifier of the Recovery effect.
+	recovery_effect_amplifier?: int @ 0..,
+}
+
+dispatch minecraft:resource["lso:body_damage_sources"] to struct BodyPartsDamageSource {
+	/// How damage distributes across `body_parts`.
+	damage_distribution: DamageDistribution,
+	/// Body parts affected by this damage source.
+	body_parts: [BodyPart],
+}
+
+// ============================================================================
+// Global Loot Modifiers (`neoforge:loot_modifier_codec`)
+// ============================================================================
+
+dispatch neoforge:loot_modifier_codec["legendarysurvivaloverhaul:additional_loot_table"] to struct LsoAdditionalLootTableModifier {
+	/// Loot table ID injected into matching target loot tables.
+	lootTable: #[id="loot_table"] string,
+}

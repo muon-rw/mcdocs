@@ -1,0 +1,42 @@
+// Datapack schema for Trinkets (`data/trinkets/slots/` and `data/trinkets/entities/`).
+
+enum(string) TrinketsDropRule {
+	Default = "DEFAULT",
+	Drop = "DROP",
+	Keep = "KEEP",
+	Destroy = "DESTROY",
+	DefaultLower = "default",
+	DropLower = "drop",
+	KeepLower = "keep",
+	DestroyLower = "destroy",
+}
+
+dispatch minecraft:resource["trinkets:slots"] to struct TrinketsSlot {
+	/// When true, replaces lower-priority definitions for this slot.
+	replace?: boolean,
+	/// Number of slots in this slot type.
+	amount?: int @ 0..,
+	/// Sort order within the slot group.
+	order?: int,
+	/// Empty-slot icon texture path.
+	icon?: string,
+	/// Death drop rule for items in this slot.
+	drop_rule?: TrinketsDropRule,
+	/// Custom slot index identifier (used by group definitions).
+	slot_id?: int,
+	/// Predicate IDs validating whether an item can be equipped here.
+	validator_predicates?: [string],
+	/// Predicate IDs allowing shift-click quick move into this slot.
+	quick_move_predicates?: [string],
+	/// Predicate IDs controlling slot tooltip display.
+	tooltip_predicates?: [string],
+}
+
+dispatch minecraft:resource["trinkets:entities"] to struct TrinketsEntitySlots {
+	/// When true, replaces lower-priority slot lists for these entities.
+	replace?: boolean,
+	/// Entity type IDs receiving these slots (for example `"player"`).
+	entities: [#[id(registry="entity_type", tags="allowed")] string],
+	/// Qualified Trinkets slot paths (`<group>/<slot>`, for example `"chest/necklace"`).
+	slots: [string],
+}

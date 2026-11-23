@@ -1,0 +1,54 @@
+// Datapack schema for Accessories (`data/<ns>/accessories/{slot, entity, group}/`).
+
+enum(string) AccessoriesOperation {
+	/// Sets the slot count directly.
+	Set = "set",
+	/// Adds `amount` to the existing slot count.
+	Add = "add",
+	/// Subtracts `amount` from the existing slot count.
+	Sub = "sub",
+}
+
+enum(string) AccessoriesDropRule {
+	Default = "DEFAULT",
+	Drop = "DROP",
+	Keep = "KEEP",
+	Destroy = "DESTROY",
+}
+
+dispatch minecraft:resource["accessories:slot"] to struct AccessoriesSlot {
+	/// When true, replaces lower-priority definitions for this slot.
+	replace?: boolean,
+	/// Base slot count (or delta, depending on `operation`).
+	amount?: int @ 0..,
+	/// How `amount` modifies the slot count (`set`, `add`, or `sub`).
+	operation?: AccessoriesOperation,
+	/// Sort order in the Accessories screen.
+	order?: int,
+	/// Empty-slot icon sprite ID.
+	icon?: string,
+	/// Death drop rule for items in this slot.
+	drop_rule?: AccessoriesDropRule,
+	/// Slot validator predicate IDs (for example `"accessories:tag"`, `"accessories:component"`).
+	validators?: [string],
+}
+
+dispatch minecraft:resource["accessories:entity"] to struct AccessoriesEntityBinding {
+	/// When true, replaces lower-priority bindings for these entities.
+	replace?: boolean,
+	/// Entity type IDs or `#entity_type_tag` entries receiving these slots.
+	entities: [#[id(registry="entity_type", tags="allowed")] string],
+	/// Slot IDs enabled on the listed entities.
+	slots: [string],
+}
+
+dispatch minecraft:resource["accessories:group"] to struct AccessoriesGroup {
+	/// When true, replaces lower-priority definitions for this group.
+	replace?: boolean,
+	/// Sort order in the Accessories screen.
+	order?: int,
+	/// Group icon sprite ID.
+	icon?: string,
+	/// Slot IDs belonging to this group.
+	slots: [string],
+}

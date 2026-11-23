@@ -1,0 +1,213 @@
+// Datapack schema for Iron's Gems 'n Jewelry (`data/<ns>/irons_jewelry/{material, part, pattern}/`).
+
+use ::java::data::recipe::Ingredient
+
+enum(string) JewelryAttributeOperation {
+	AddValue = "add_value",
+	AddMultipliedBase = "add_multiplied_base",
+	AddMultipliedTotal = "add_multiplied_total",
+	#[until="1.21"]
+	Addition = "addition",
+	#[until="1.21"]
+	MultiplyBase = "multiply_base",
+	#[until="1.21"]
+	MultiplyTotal = "multiply_total",
+}
+
+enum(string) ExplosionBlockInteraction {
+	None = "none",
+	Block = "block",
+	Mob = "mob",
+	Tnt = "tnt",
+	Trigger = "trigger",
+}
+
+/// Quality-scaled numeric value (`base + scalar * quality`, clamped by optional `min` and `max`).
+struct QualityScalar {
+	base: double,
+	scalar?: double,
+	min?: double,
+	max?: double,
+}
+
+type QualityNumber = (double | QualityScalar)
+
+// ============================================================================
+// Material Bonus Parameters & Actions
+// ============================================================================
+
+struct JewelryAttributeParam {
+	/// Entity attribute modified by this material.
+	attribute: #[id="attribute"] string,
+	/// Attribute amount (scaled by jewelry quality).
+	amount: double,
+	/// Attribute modifier operation.
+	operation: JewelryAttributeOperation,
+}
+
+struct JewelryEffectParam {
+	/// Mob effect ID granted or resisted by this material.
+	effect: #[id="mob_effect"] string,
+}
+
+struct JewelryAction {
+	/// Action serializer ID.
+	type: #[dispatcher_key="irons_jewelry:action"] string,
+	...irons_jewelry:action[[type]],
+}
+
+struct JewelryActionParam {
+	/// When true, applies the action to the wearer instead of the target entity.
+	targetSelf?: boolean,
+	/// Action triggered when the jewelry bonus fires.
+	action: JewelryAction,
+}
+
+dispatch irons_jewelry:action["irons_jewelry:apply_damage"] to struct ApplyDamageAction {
+	damageType: #[id="damage_type"] string,
+	amount: QualityNumber,
+}
+
+dispatch irons_jewelry:action["irons_jewelry:apply_effect"] to struct ApplyEffectAction {
+	effect: #[id="mob_effect"] string,
+	duration: QualityNumber,
+	amplifier?: QualityNumber,
+}
+
+dispatch irons_jewelry:action["irons_jewelry:apply_freeze"] to struct ApplyFreezeAction {
+	amount: QualityNumber,
+	instaFreeze?: boolean,
+}
+
+dispatch irons_jewelry:action["irons_jewelry:create_items"] to struct CreateItemsAction {
+	item: #[id="item"] string,
+	chance?: QualityNumber,
+	minCount?: QualityNumber,
+	maxCount?: QualityNumber,
+	sound?: #[id="sound_event"] string,
+}
+
+dispatch irons_jewelry:action["irons_jewelry:explode"] to struct ExplodeAction {
+	radius: QualityNumber,
+	affect_self?: boolean,
+	block_interaction?: ExplosionBlockInteraction,
+	knockback_multiplier?: QualityNumber,
+	small_particle?: struct {
+		type: #[id="particle_type"] string,
+		[string]: any,
+	},
+	large_particle?: struct {
+		type: #[id="particle_type"] string,
+		[string]: any,
+	},
+	sound?: #[id="sound_event"] string,
+	translation?: string,
+}
+
+dispatch irons_jewelry:action["irons_jewelry:heal"] to struct HealAction {
+	amount: QualityNumber,
+}
+
+dispatch irons_jewelry:action["irons_jewelry:ignite"] to struct IgniteAction {
+	tickDuration: QualityNumber,
+}
+
+dispatch irons_jewelry:action["irons_jewelry:knockback"] to struct KnockbackAction {
+	strength: QualityNumber,
+}
+
+// ============================================================================
+// Materials (`data/<ns>/irons_jewelry/material/*.json`)
+// ============================================================================
+
+dispatch minecraft:resource["irons_jewelry:material"] to struct JewelryMaterial {
+	/// Translation key for this material's display name.
+	descriptionId: string,
+	/// Crafting ingredient representing this material at the Jewelcrafting Station.
+	ingredient?: Ingredient,
+	/// Palette texture path used to tint jewelry sprites.
+	paletteLocation: string,
+	/// Quality multiplier contributed by this material.
+	quality: double,
+	/// Map of bonus parameter type ID to parameter configuration.
+	bonusParameters: struct {
+		"irons_jewelry:attribute"?: JewelryAttributeParam,
+		"irons_jewelry:positive_effect"?: JewelryEffectParam,
+		"irons_jewelry:negative_effect"?: JewelryEffectParam,
+		"irons_jewelry:action"?: JewelryActionParam,
+		/// Addon-registered bonus parameter types.
+		[string]: any,
+	},
+	/// Legacy material type categories (pre-tag material filtering).
+	materialType?: [string],
+}
+
+// ============================================================================
+// Parts (`data/<ns>/irons_jewelry/part/*.json`)
+// ============================================================================
+
+dispatch minecraft:resource["irons_jewelry:part"] to struct JewelryPart {
+	/// Translation key for this part's display name.
+	descriptionId: string,
+	/// Base grayscale texture path tinted by the chosen material palette.
+	baseTextureLocation: string,
+	/// Reference palette texture path used for color remapping.
+	paletteKey: string,
+	/// Material ID, `#tag`, or list of material IDs allowed in this part slot.
+	allowedMaterials?: (
+		#[id(registry="irons_jewelry:material", tags="allowed")] string |
+		[#[id="irons_jewelry:material"] string]
+	),
+	/// Legacy material type filter list.
+	allowedMaterialTypes?: [string],
+}
+
+// ============================================================================
+// Patterns (`data/<ns>/irons_jewelry/pattern/*.json`)
+// ============================================================================
+
+struct PatternPartBonus {
+	/// Bonus type ID (for example `"irons_jewelry:attribute_bonus"`, `"irons_jewelry:on_attack_bonus"`).
+	bonusType: string,
+	/// Optional quality scaling multiplier for this bonus.
+	qualityMultiplier?: double,
+	/// Optional cooldown in ticks for triggered bonuses.
+	cooldown?: QualityNumber,
+	/// Bonus-specific extra fields.
+	[string]: any,
+}
+
+struct PatternPartEntry {
+	/// Part definition ID.
+	id: #[id="irons_jewelry:part"] string,
+	/// Material item count required for this part.
+	materialCost: int @ 1..,
+	/// Layer render order (lower draws behind higher).
+	drawOrder: int @ 0..,
+	/// Bonuses driven by the material placed in this part.
+	bonuses?: [PatternPartBonus],
+}
+
+dispatch minecraft:resource["irons_jewelry:pattern"] to struct JewelryPattern {
+	/// Jewelry item type ID (for example `"irons_jewelry:ring"`, `"irons_jewelry:necklace"`).
+	type: string,
+	/// Translation key for this pattern's display name.
+	descriptionId: string,
+	/// Ordered parts that compose this piece of jewelry.
+	parts: [PatternPartEntry],
+	/// Part ID whose material determines the item's overall quality tier.
+	partForQuality?: #[id="irons_jewelry:part"] string,
+	/// Overall quality multiplier applied to this pattern.
+	qualityMultiplier?: double,
+	/// Whether players know this pattern without discovering a blueprint.
+	unlockedByDefault?: boolean,
+}
+
+// ============================================================================
+// Global Loot Modifiers (`neoforge:loot_modifier_codec`)
+// ============================================================================
+
+dispatch neoforge:loot_modifier_codec["irons_jewelry:append_loot"] to struct JewelryAppendLootModifier {
+	/// Loot table ID whose rolls are appended to matching target tables.
+	key: #[id="loot_table"] string,
+}

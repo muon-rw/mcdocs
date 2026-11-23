@@ -1,0 +1,124 @@
+// Datapack schema for Farmer's Delight (1.20.1 and 1.21.1+).
+// Covers Cooking Pot & Cutting Board recipes, special crafting recipes,
+// global loot modifiers, and loot functions.
+
+use ::java::data::recipe::CraftingBookCategory
+use ::java::data::recipe::Ingredient
+use ::java::data::loot::LootCondition
+use ::java::world::item::ItemStack
+
+enum(string) CookingPotBookTab {
+	Meals = "meals",
+	Drinks = "drinks",
+	Misc = "misc",
+}
+
+struct LegacyItemStack {
+	item: #[id="item"] string,
+	count?: int @ 1..,
+	nbt?: string,
+}
+
+struct LegacyChanceResult {
+	item: #[id="item"] string,
+	count?: int @ 1..,
+	chance?: float @ 0..1,
+}
+
+struct ModernChanceResult {
+	item: ItemStack,
+	chance?: float @ 0..1,
+}
+
+struct ModernCuttingSound {
+	sound_id: #[id="sound_event"] string,
+}
+
+// ============================================================================
+// Recipes (`minecraft:recipe_serializer`)
+// ============================================================================
+
+/// Cooking Pot recipe (`farmersdelight:cooking`).
+dispatch minecraft:recipe_serializer["farmersdelight:cooking"] to struct CookingPotRecipe {
+	/// Optional recipe book group name.
+	group?: string,
+	/// Cooking Pot recipe book tab (`meals`, `drinks`, or `misc`).
+	recipe_book_tab?: CookingPotBookTab,
+	/// Up to 6 input ingredients.
+	ingredients: [Ingredient] @ 1..6,
+	/// Output meal item stack.
+	result: (#[since="1.21"] ItemStack | #[until="1.21"] LegacyItemStack),
+	/// Optional serving container required in the container slot (for example bowl or bottle).
+	container?: (#[since="1.21"] ItemStack | #[until="1.21"] LegacyItemStack),
+	/// Experience awarded when taking the cooked result.
+	experience?: float @ 0..,
+	/// Cooking duration in ticks. Defaults to 200.
+	cookingtime?: int @ 1..,
+}
+
+/// Cutting Board recipe (`farmersdelight:cutting`).
+dispatch minecraft:recipe_serializer["farmersdelight:cutting"] to struct CuttingBoardRecipe {
+	/// Optional recipe book group name.
+	group?: string,
+	/// Input item(s) placed on the Cutting Board.
+	ingredients: [Ingredient] @ 1..,
+	/// Tool ingredient (or list of tool ingredients, including `farmersdelight:tool_action` / `item_ability`).
+	tool: (Ingredient | [Ingredient]),
+	/// One or more output items with optional drop chances.
+	result: (
+		#[since="1.21"] [ModernChanceResult] |
+		#[until="1.21"] [LegacyChanceResult]
+	),
+	/// Sound played when cutting.
+	sound?: (
+		#[since="1.21"] (ModernCuttingSound | #[id="sound_event"] string) |
+		#[until="1.21"] #[id="sound_event"] string
+	),
+}
+
+/// Special Farmer's Delight crafting recipes (`farmersdelight:dough`, `farmersdelight:food_serving`).
+dispatch minecraft:recipe_serializer["farmersdelight:dough", "farmersdelight:food_serving"] to struct SpecialFarmersDelightRecipe {
+	category?: CraftingBookCategory,
+}
+
+// ============================================================================
+// Global Loot Modifiers (`neoforge:loot_modifier_codec`)
+// ============================================================================
+
+dispatch neoforge:loot_modifier_codec["farmersdelight:add_item"] to struct FdAddItemModifier {
+	/// Item ID added to the loot drops.
+	item: #[id="item"] string,
+	/// Stack count added. Defaults to 1.
+	count?: float @ 0..,
+}
+
+dispatch neoforge:loot_modifier_codec["farmersdelight:add_loot_table"] to struct FdAddLootTableModifier {
+	/// Loot table ID rolled and appended (1.21+).
+	#[since="1.21"]
+	table: #[id="loot_table"] string,
+	/// Loot table ID rolled and appended (1.20.x).
+	#[until="1.21"]
+	lootTable: #[id="loot_table"] string,
+}
+
+dispatch neoforge:loot_modifier_codec["farmersdelight:pastry_slicing"] to struct FdPastrySlicingModifier {
+	/// Slice item ID dropped when slicing a pie or cake block.
+	slice: #[id="item"] string,
+}
+
+dispatch neoforge:loot_modifier_codec["farmersdelight:replace_item"] to struct FdReplaceItemModifier {
+	/// Existing drop item ID to replace.
+	removed_item: #[id="item"] string,
+	/// Replacement item ID.
+	added_item: #[id="item"] string,
+	/// Replacement count. Defaults to 1.
+	count?: int @ 1..,
+}
+
+// ============================================================================
+// Loot Functions (`minecraft:loot_function`)
+// ============================================================================
+
+dispatch minecraft:loot_function["farmersdelight:smoker_cook", "farmersdelight:copy_meal", "farmersdelight:copy_skillet"] to struct FdLootFunction {
+	conditions?: [LootCondition],
+}
