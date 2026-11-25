@@ -1,4 +1,4 @@
-# mcdocs
+# Modded mcdocs
 
 Modded Minecraft [mcdoc](https://github.com/SpyglassMC/vanilla-mcdoc) datapack schemas maintained for [Packraven](https://github.com/muon-rw/packraven).
 
@@ -23,10 +23,6 @@ Modded Minecraft [mcdoc](https://github.com/SpyglassMC/vanilla-mcdoc) datapack s
 - Overgrown's Origins / Apoli
 - Lithostitched
 - Numismatic Overhaul (+ Reforged)
-
-## Manifest format
-
-Packraven fetches `manifest.json` at runtime and caches it locally alongside upstream `vanilla-mcdoc` and `misode.github.io` partner schemas. Each entry in `schemas` declares its `.mcdoc` path, module namespace, matching `modIds` and optional `loaders`, optional Minecraft version bounds (`minMinecraft`, `maxMinecraft`), and datapack folder-to-category mappings (`paths`).
 
 ## License
 
